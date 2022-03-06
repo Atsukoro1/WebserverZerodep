@@ -1,21 +1,10 @@
 const crypto = require("crypto");
 
+// Import parsers
+const { parseReceived } = require("./parser");
+
 // We'll cache all connected clients here to prevent DDOS
 const connectedClients = new Map();
-
-function decodeContent(str) {
-    const contentLength = str[1] - 0x80;
-    const key = new Buffer.alloc(str[2] + str[3] + str[4] + str[5]);
-    
-    if(contentLength <= 125) {
-        let final = [];
-        for (let i = 0; i < contentLength; i++) {
-            final.push(str[6 + i] ^ key[i % 4]);
-        };
-    
-        return new Buffer(final).toString("utf-8");
-    }
-}
 
 const webSocketHandler = function(req, socket) {
     // Get client's ip address in order to identify it
@@ -51,7 +40,7 @@ const webSocketHandler = function(req, socket) {
 
     // Receive all data from client
     socket.on("data", data => {
-        console.log(decodeContent(data));
+        parseReceived(data);
     });
 }
 
