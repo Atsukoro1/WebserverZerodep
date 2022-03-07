@@ -38,16 +38,41 @@ const webSocketHandler = function(req, socket) {
     const RESPONSE = `HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${createAcceptKey()}\r\nSec-Websocket-Protocol: json\r\n\r\n`
     socket.write(RESPONSE);
 
-    // Handshake was successful, cache client
-    CONNECTEDCLIENTS.set(IP, true);
+    // Handshake was successful
+    // Create setTimeout that will run when client's pinging time runs out.
+    let pingInterval = setTimeout(() => {
+        socket.end();
+        CONNECTEDCLIENTS.delete(IP);
+    }, 11000);
+
+    CONNECTEDCLIENTS.set(IP, {
+        connected: true,
+        pingInterval: pingInterval,
+        nextPingAt: Date.now() + 10000
+    });
 
     // Receive all data from client
     socket.on("data", async (data) => {
         try {
-            // We are ready to work with plaintext content 
+            // We are ready to work with JSON content 
             const CONTENT = await parseReceived(data);
-            
-            console.log(CONTENT);
+
+            if(CONTENT.ping) {
+                // Get client that pinged our websocket server by ip address
+                let pingedClient = CONNECTEDCLIENTS.get(IP);
+
+                // Clear actual interval and replace it with new interval
+                clearTimeout(pingedClient.pingInterval);
+                let newPingInterval = setTimeout(() => {
+                    socket.end();
+                    CONNECTEDCLIENTS.delete(IP);
+                }, 11000);
+
+                // Asign new values to currently connected client and save it
+                pingedClient.pingInterval = newPingInterval;
+                pingedClient.nextPingAt = Date.now() + 10000;
+                CONNECTEDCLIENTS.set(IP, pingedClient);
+            }
 
         } catch(e) {
             switch(e) {
@@ -58,9 +83,14 @@ const webSocketHandler = function(req, socket) {
                 case "unmasked":
                     // Content didn't have a mask (should have when server->client)
                     break;
+
+                case "notSupported":
+                    // Will be thrown if client sends a binary or continuation which are not supported 
+                    break;
                 
                 case "disconnect":
                     // Client disconnected
+                    CONNECTEDCLIENTS.delete(IP);
                     socket.end();
                     break;
             }

@@ -27,7 +27,8 @@ function parseReceived(buff) {
         // Check if content's length is bigger than 125,
         // content's opcode is something else than 1,
         // if so, return nothing.
-        if(OPCODE !== 1 || ISMASKED === false) return reject("unmasked");
+        if(ISMASKED === false) return reject("unmasked");
+        if(OPCODE !== 1) return reject("notSupported");
 
         // We need to skip first two bytes containing the data about the payload
         let offset = 2;
@@ -56,6 +57,7 @@ function parseReceived(buff) {
         try {
             const JSONDATA = JSON.parse(data.toString('utf-8'))
             return resolve(JSONDATA);
+
         } catch(e) {
             return reject("incorrectFormatting");
         }

@@ -15,3 +15,5 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, "127.0.0.1", function() {
     console.log(`[SERVER] Server is listening to port *${PORT}`)
 });
+
+console.log(new Date(Date.now() + 60000))
