@@ -1,9 +1,9 @@
 const crypto = require("crypto");
 
 // Import parsers
-const { parseReceived } = require("./parser");
+const { parseReceived, parseResponse } = require("./parser");
 
-// We'll cache all connected clients here to prevent DDOS
+// We'll cache all connected clients here
 const CONNECTEDCLIENTS = new Map();
 
 const webSocketHandler = function(req, socket) {
@@ -45,6 +45,7 @@ const webSocketHandler = function(req, socket) {
         CONNECTEDCLIENTS.delete(IP);
     }, 11000);
 
+    // Set a newly connected client
     CONNECTEDCLIENTS.set(IP, {
         connected: true,
         pingInterval: pingInterval,
@@ -72,27 +73,16 @@ const webSocketHandler = function(req, socket) {
                 pingedClient.pingInterval = newPingInterval;
                 pingedClient.nextPingAt = Date.now() + 10000;
                 CONNECTEDCLIENTS.set(IP, pingedClient);
+
+                // Return pong response
+                socket.write(parseResponse({ pong: true }));
             }
 
         } catch(e) {
-            switch(e) {
-                case "incorrectFormatting":
-                    // Content was inappropriately formatted
-                    break;
-
-                case "unmasked":
-                    // Content didn't have a mask (should have when server->client)
-                    break;
-
-                case "notSupported":
-                    // Will be thrown if client sends a binary or continuation which are not supported 
-                    break;
-                
-                case "disconnect":
-                    // Client disconnected
-                    CONNECTEDCLIENTS.delete(IP);
-                    socket.end();
-                    break;
+            if(e === "disconnect") {
+                // Client disconnected by itself
+                CONNECTEDCLIENTS.delete(IP);
+                socket.end();
             }
         }
     });

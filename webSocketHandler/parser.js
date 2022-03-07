@@ -64,4 +64,23 @@ function parseReceived(buff) {
     });
 }
 
-module.exports = { parseReceived };
+function parseResponse(JSN) {
+    const DATATOSEND = JSON.stringify(JSN);
+
+    // Get the size in bytes we need to allocate for the new Buffer
+    // First two bytes are for "header info (opcode, payload length and more)"
+    // Second is the byte size of JSON payload
+    // And third are two bytes for content length
+    const BYTESIZETOALLOC = 2 + Buffer.byteLength(DATATOSEND) + 2;
+    const buff = Buffer.alloc(BYTESIZETOALLOC);
+
+    buff.writeUInt8(0x1, 0);
+    buffer.writeUInt8(126, 1); 
+    buff.writeUInt16BE(Buffer.byteLength(DATATOSEND), 2)
+    buff.write(DATATOSEND, 2 + 2);
+
+    console.log(buff);
+    return buff;
+}
+
+module.exports = { parseReceived, parseResponse };
