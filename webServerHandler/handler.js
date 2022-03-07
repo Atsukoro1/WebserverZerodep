@@ -3,11 +3,11 @@ const fs = require('fs');
 const path = require('path')
 
 // We're going to cache all routes here
-const routes = new Map();
+const ROUTES = new Map();
 
 // Scrape the routes folder and cache it all
 (async function() {
-    const folders = await fs.readdirSync(`${__dirname}/routes`);
+    const FOLDERS = await fs.readdirSync(`${__dirname}/routes`);
     
     async function crawlDir(routePath) {
         const filesInFolder = await fs.readdirSync(`${__dirname}/routes/${routePath}`);
@@ -15,18 +15,18 @@ const routes = new Map();
         filesInFolder.forEach(async(file) => {
             if(path.extname(file).length > 0) {
                 // File is located at this path, add it to routes
-                const fileToAdd = require(`${__dirname}/routes/${routePath}/${file}`);
-                routes.set(`/${routePath}/${file}`.split(".")[0], fileToAdd.executor);
+                const FILETOADD = require(`${__dirname}/routes/${routePath}/${file}`);
+                ROUTES.set(`/${routePath}/${file}`.split(".")[0], FILETOADD.executor);
                 console.log(`[ROUTES] Added route /${routePath}/${file}`)
             } else {
                 // Directory is located at this path, crawl it
-                const newPathToCrawl = `${routePath}/${file}`;
-                crawlDir(`${newPathToCrawl}`)
+                const NEWPATHTOCRAWL = `${routePath}/${file}`;
+                crawlDir(`${NEWPATHTOCRAWL}`)
             }
         });
     }
 
-    folders.forEach(async(folder) => {
+    FOLDERS.forEach(async(folder) => {
         await crawlDir(folder);
     });
 }());
@@ -47,18 +47,18 @@ function parseCookies(cookieString) {
 
 // Retrieve JSON or plaintext data from request
 async function retrieveBody(request) {
-    const contentType = request.headers['content-type' || 'Content-Type'];
+    const CONTENTTYPE = request.headers['content-type' || 'Content-Type'].toLowerCase();
 
     let body = [];
 
-    if(contentType) {
+    if(CONTENTTYPE) {
         await request.on('data', (chunk) => {
             body.push(chunk);
         });
     
         if(body.length !== 0) {
             body = Buffer.concat(body)
-            request.headers['content-type'].toLowerCase() == 'application/json' 
+            CONTENTTYPE == 'application/json' 
             ? body = JSON.parse(body.toString())
             : body = body.toString();
         }
@@ -75,10 +75,10 @@ async function handleWebserverRequest(request, response) {
     // Wait for body to be delivered
     request.body = await retrieveBody(request);
 
-    const executor = routes.get(request.url);
+    const EXECUTOR = ROUTES.get(request.url);
 
-    if(executor) {
-        executor(request, response);
+    if(EXECUTOR) {
+        EXECUTOR(request, response);
     } else {
         response.statusCode = 404;
         response.write(`[${request.method}] Route ${request.url} does not exist!`);
@@ -86,4 +86,4 @@ async function handleWebserverRequest(request, response) {
     }
 }
 
-module.exports = { handleWebserverRequest, routes };
+module.exports = { handleWebserverRequest, ROUTES };

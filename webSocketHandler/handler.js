@@ -8,10 +8,10 @@ const CONNECTEDCLIENTS = new Map();
 
 const webSocketHandler = function(req, socket) {
     // Get client's ip address in order to identify it
-    const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+    const IP = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
     // Check if client is already connected
-    if(CONNECTEDCLIENTS.get(ip)) return socket.end("HTTP/1.1 429 Too Many Requests\r\n\r\n");
+    if(CONNECTEDCLIENTS.get(IP)) return socket.end("HTTP/1.1 429 Too Many Requests\r\n\r\n");
 
     // Check for correct headers
     // Client must specify Upgrade and Subprotocol header
@@ -39,12 +39,32 @@ const webSocketHandler = function(req, socket) {
     socket.write(RESPONSE);
 
     // Handshake was successful, cache client
-    CONNECTEDCLIENTS.set(ip, true);
+    CONNECTEDCLIENTS.set(IP, true);
 
     // Receive all data from client
-    socket.on("data", data => {
-        const CONTENT = parseReceived(data);
-        console.log(CONTENT);
+    socket.on("data", async (data) => {
+        try {
+            // We are ready to work with plaintext content 
+            const CONTENT = await parseReceived(data);
+            
+            console.log(CONTENT);
+
+        } catch(e) {
+            switch(e) {
+                case "incorrectFormatting":
+                    // Content was inappropriately formatted
+                    break;
+
+                case "unmasked":
+                    // Content didn't have a mask (should have when server->client)
+                    break;
+                
+                case "disconnect":
+                    // Client disconnected
+                    socket.end();
+                    break;
+            }
+        }
     });
 }
 
