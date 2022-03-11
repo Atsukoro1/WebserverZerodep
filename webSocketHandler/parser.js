@@ -1,3 +1,4 @@
+// Resolve frame buffer into readable JSON
 function parseReceived(buff) {
     return new Promise((resolve, reject) => {
         // Content is final frame in binary, represented Boolean
@@ -57,13 +58,13 @@ function parseReceived(buff) {
         try {
             const JSONDATA = JSON.parse(data.toString('utf-8'))
             return resolve(JSONDATA);
-
         } catch(e) {
             return reject("incorrectFormatting");
         }
     });
 }
 
+// Will be emitted when we try to parse JSON and make frame buffer from it
 function parseResponse(JSN) {
     const DATA = JSON.stringify(JSN);
     const DATABYTECOUNT = Buffer.byteLength(DATA);
@@ -72,9 +73,23 @@ function parseResponse(JSN) {
 
     let finalBuffer = Buffer.alloc(2 + BYTECOUNTLENGTH + DATABYTECOUNT);
 
+    // Write header info
+    // First bit -> final frame bool represented by decimal
+    // Than Flags and more info we don't need,
+    // Last 4 bits are payload length
     finalBuffer.writeUInt8(0b10000001, 0);
-    finalBuffer.writeUInt8(0b00001101, 1)
-    finalBuffer.write(DATA, 2);
+
+    // Write payload length
+    finalBuffer.writeUInt8(0b0 | PAYLOADLENGTH, 1)
+
+    // If byte count is bigger than two, 
+    // than we need two more bytes to write payload length
+    if(BYTECOUNTLENGTH === 2) {
+        finalBuffer.writeUInt16BE(DATABYTECOUNT, 2); 
+        finalBuffer.write(DATA, 2 + BYTECOUNTLENGTH);
+    } else {
+        finalBuffer.write(DATA, 2);
+    }
 
     return finalBuffer;
 }

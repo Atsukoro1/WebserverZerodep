@@ -43,13 +43,13 @@ const webSocketHandler = function(req, socket) {
     let pingInterval = setTimeout(() => {
         socket.end();
         CONNECTEDCLIENTS.delete(IP);
-    }, 11000);
+    }, 26000);
 
     // Set a newly connected client
     CONNECTEDCLIENTS.set(IP, {
         connected: true,
         pingInterval: pingInterval,
-        nextPingAt: Date.now() + 10000
+        nextPingAt: Date.now() + 25000
     });
 
     // Receive all data from client
@@ -67,15 +67,18 @@ const webSocketHandler = function(req, socket) {
                 let newPingInterval = setTimeout(() => {
                     socket.end();
                     CONNECTEDCLIENTS.delete(IP);
-                }, 11000);
+                }, 26000);
 
                 // Asign new values to currently connected client and save it
                 pingedClient.pingInterval = newPingInterval;
-                pingedClient.nextPingAt = Date.now() + 10000;
+                pingedClient.nextPingAt = Date.now() + 25000;
                 CONNECTEDCLIENTS.set(IP, pingedClient);
-
+                
                 // Return pong response
-                socket.write(parseResponse({ pong: true }));
+                socket.write(parseResponse({ pong: true, nextPingAt: Date.now() + 25000 }));
+            } else {
+                // Return response
+                socket.write(parseResponse({ received: true }));
             }
 
         } catch(e) {
