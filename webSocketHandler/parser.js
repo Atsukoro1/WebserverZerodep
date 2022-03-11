@@ -65,22 +65,18 @@ function parseReceived(buff) {
 }
 
 function parseResponse(JSN) {
-    const DATATOSEND = JSON.stringify(JSN);
+    const DATA = JSON.stringify(JSN);
+    const DATABYTECOUNT = Buffer.byteLength(DATA);
+    const BYTECOUNTLENGTH = DATABYTECOUNT < 126 ? 0 : 2;
+    const PAYLOADLENGTH = BYTECOUNTLENGTH === 0 ? DATABYTECOUNT : 126;
 
-    // Get the size in bytes we need to allocate for the new Buffer
-    // First two bytes are for "header info (opcode, payload length and more)"
-    // Second is the byte size of JSON payload
-    // And third are two bytes for content length
-    const BYTESIZETOALLOC = 2 + Buffer.byteLength(DATATOSEND) + 2;
-    const buff = Buffer.alloc(BYTESIZETOALLOC);
+    let finalBuffer = Buffer.alloc(2 + BYTECOUNTLENGTH + DATABYTECOUNT);
 
-    buff.writeUInt8(0x1, 0);
-    buffer.writeUInt8(126, 1); 
-    buff.writeUInt16BE(Buffer.byteLength(DATATOSEND), 2)
-    buff.write(DATATOSEND, 2 + 2);
+    finalBuffer.writeUInt8(0b10000001, 0);
+    finalBuffer.writeUInt8(0b00001101, 1)
+    finalBuffer.write(DATA, 2);
 
-    console.log(buff);
-    return buff;
+    return finalBuffer;
 }
 
 module.exports = { parseReceived, parseResponse };
