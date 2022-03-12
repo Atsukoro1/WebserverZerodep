@@ -1,7 +1,3 @@
-const schemaValues = [
-    "string", "number", "boolean", "required", "alphanum", "email"
-];
-
 // Will loop throught string and return every mistake in body
 function checkString(body, schema) {
     if(!body) return ["Body should be defined!"];
@@ -31,12 +27,13 @@ function checkString(body, schema) {
                 MISTAKES.push(`${schema[0]} is not an email!`);
                 break;
 
-            case validator.match(/max:[0-9]*/g)[0]:
-                if(VALUE > validator.split(":")[1]) MISTAKES.push(`${schema[0]} should be lower than ${validator.split(":")[1]}!`);
+            case validator.includes("max") ? validator.match(/max:[0-9]*/g)[0] : null:
+                if(VALUE.length > parseInt(validator.split(":")[1])) MISTAKES.push(`${schema[0]} should be lower than ${validator.split(":")[1]}!`);
                 break;
 
-            case validator.match(/min:[0-9]*/g)[0]:
-                if(VALUE < validator.split(":")[1]) MISTAKES.push(`${schema[0]} should be bigger than ${validator.split(":")[1]}!`);
+            case validator.includes("min") ? validator.match(/min:[0-9]*/g)[0] : null:
+                console.log({ val: VALUE, compTo: validator.split(":")[1] })
+                if(VALUE.length < parseInt(validator.split(":")[1])) MISTAKES.push(`${schema[0]} should be bigger than ${validator.split(":")[1]}!`);
                 break;
         }
     });
