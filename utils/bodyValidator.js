@@ -1,9 +1,11 @@
 const schemaValues = [
-    "string", "number", "boolean", "required", "alphanum", "email", "match"
+    "string", "number", "boolean", "required", "alphanum", "email"
 ];
 
 // Will loop throught string and return every mistake in body
 function checkString(body, schema) {
+    if(!body) return ["Body should be defined!"];
+
     const MISTAKES = [];
     const VALUE = body[schema[0]];
 
@@ -50,7 +52,7 @@ const validateBody = function(body, validationSchema) {
         Object.entries(toCheck).forEach(el => {
             switch(typeof(el[1])) {
                 case "string":
-                    console.log(checkString(body, el));
+                    checkString(body, el).map(mist => MISTAKES.push(mist));
                     break;
     
                 case "object":
@@ -63,6 +65,8 @@ const validateBody = function(body, validationSchema) {
     };
 
     checkArray(validationSchema);
+
+    return MISTAKES;
 };
 
 module.exports = { validateBody };
