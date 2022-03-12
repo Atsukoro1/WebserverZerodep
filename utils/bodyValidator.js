@@ -32,7 +32,6 @@ function checkString(body, schema) {
                 break;
 
             case validator.includes("min") ? validator.match(/min:[0-9]*/g)[0] : null:
-                console.log({ val: VALUE, compTo: validator.split(":")[1] })
                 if(VALUE.length < parseInt(validator.split(":")[1])) MISTAKES.push(`${schema[0]} should be bigger than ${validator.split(":")[1]}!`);
                 break;
         }
@@ -45,6 +44,7 @@ function checkString(body, schema) {
 const validateBody = function(body, validationSchema) {
     const MISTAKES = [];
 
+    Object.freeze();
     function checkArray(toCheck) {
         Object.entries(toCheck).forEach(el => {
             switch(typeof(el[1])) {
