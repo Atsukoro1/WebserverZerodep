@@ -2,10 +2,10 @@
 const fs = require('fs');
 const path = require('path')
 
-// We're going to cache all routes here
+// We're going to store all routes here
 const ROUTES = new Map();
 
-// Scrape the routes folder and cache it all
+// Scrape the routes folder and store it into ROUTES map
 (async function() {
     const FOLDERS = await fs.readdirSync(`${__dirname}/routes`);
     

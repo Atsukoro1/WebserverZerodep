@@ -15,3 +15,7 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, "127.0.0.1", function() {
     console.log(`[SERVER] Server is listening to port *${PORT}`)
 });
+
+const { validateBody } = require("./utils/bodyValidator");
+
+validateBody({ num: 1 }, { num: "number;max:0" })

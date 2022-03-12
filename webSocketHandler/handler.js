@@ -3,7 +3,7 @@ const crypto = require("crypto");
 // Import parsers
 const { parseReceived, parseResponse } = require("./parser");
 
-// We'll cache all connected clients here
+// We'll store all connected clients here
 const CONNECTEDCLIENTS = new Map();
 
 const webSocketHandler = function(req, socket) {
